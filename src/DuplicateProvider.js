@@ -21,8 +21,15 @@ class DuplicateDataProvider {
   addItem(match) {
     const code = match.instances[0].lines.split('\n')[0]
     this.data.push(new DuplicateItem(
+      match,
       `Duplicated ${match.instances.length} times: ${code}`,
-      match.instances.map(t => new DuplicateItem(`${vscode.workspace.asRelativePath(t.filename)}:${t.start.line}-${t.end.line}`))))
+      match.instances.map(t =>
+        new DuplicateItem(
+          t,
+          `${vscode.workspace.asRelativePath(t.filename)}:${t.start.line}-${t.end.line}`
+        )
+      )
+    ))
   }
 
   clear() {
@@ -43,12 +50,26 @@ class DuplicateDataProvider {
 }
 
 class DuplicateItem extends vscode.TreeItem {
-  constructor(label, children) {
+  constructor(match, label, children) {
     super(
       label,
       children === undefined ? vscode.TreeItemCollapsibleState.None :
         vscode.TreeItemCollapsibleState.Expanded)
     this.children = children
+    if (match.filename) {
+      this.command = {
+        command: 'vscode.open',
+        arguments: [
+          vscode.Uri.file(match.filename),
+          {
+            selection: new vscode.Range(
+              new vscode.Position(match.start.line - 1, match.start.column),
+              new vscode.Position(match.end.line - 1, 999)
+            )
+          }
+        ]
+      }
+    }
   }
 }
 

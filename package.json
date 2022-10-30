@@ -2,7 +2,7 @@
   "name": "duplications-analyzer",
   "displayName": "Duplications Analyzer",
   "description": "Static analysis tool for detecting code duplications using jsinspect for JavaScript projects.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.72.0"
   },
