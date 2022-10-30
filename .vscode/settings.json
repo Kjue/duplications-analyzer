@@ -7,6 +7,6 @@
     },
     "editor.formatOnType": false,
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
 }

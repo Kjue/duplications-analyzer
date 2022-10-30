@@ -6,21 +6,44 @@
   "engines": {
     "vscode": "^1.72.0"
   },
+  "publisher": "lamek-innovations",
   "categories": [
     "Other"
   ],
   "main": "./src/extension.js",
+  "activationEvents": [
+    "onCommand:duplications-analyzer.inspect",
+    "onView:duplicationsExplorer"
+  ],
   "contributes": {
     "commands": [
       {
         "command": "duplications-analyzer.inspect",
-        "title": "DA: Inspect duplications"
+        "title": "DA: Inspect duplications",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "duplicationsExplorer",
+          "name": "Duplications Explorer"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "duplications-analyzer.inspect",
+          "when": "view == duplicationsExplorer",
+          "group": "navigation"
+        }
+      ]
+    }
   },
-  "activationEvents": [
-    "onCommand:duplications-analyzer.inspect"
-  ],
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",

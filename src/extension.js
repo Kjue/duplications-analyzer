@@ -8,62 +8,89 @@ const {
   reporters
 } = require('jsinspect')
 
+const { DuplicateDataProvider } = require('./DuplicateProvider')
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
+
+let provider = new DuplicateDataProvider()
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
 
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "duplications-analyzer" is now active!')
-
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with  registerCommand
   // The commandId parameter must match the command field in package.json
-  let disposable = commands.registerCommand(inspectCommand.command, async function () {
-    // The code you place here will be executed every time your command is executed
+  registerCommand(context, inspectCommand.command, analyzeDuplications)
 
-    // Display a message box to the user
-    window.showInformationMessage('Hello World from Duplications Analyzer!')
+  window.registerTreeDataProvider('duplicationsExplorer', provider)
+}
 
-    let program = {
-      threshold: 30,
-      identifiers: false,
-      literals: false,
-      minInstances: 2,
-      truncate: 0
-    }
+/**
+ * The function to analyze duplications.
+ */
+async function analyzeDuplications() {
+  // The code you place here will be executed every time your command is executed
 
-    const paths = await (await workspace.findFiles('**/*.js')).map(t => t.fsPath)
+  // Display a message box to the user
+  window.showInformationMessage('Hello World from Duplications Analyzer!')
 
-    let inspector = new Inspector(paths, {
-      threshold:    program.threshold,
-      identifiers:  program.identifiers,
-      literals:     program.literals,
-      minInstances: program.minInstances
-    })
+  let program = {
+    threshold: 30,
+    identifiers: false,
+    literals: false,
+    minInstances: 2,
+    truncate: 0
+  }
 
-    // Retrieve the requested reporter
-    let reporterType = reporters[program.reporter] || reporters.default
-    new reporterType(inspector, {
-      truncate: program.truncate
-    })
+  const paths = await (await workspace.findFiles('**/*.js')).map(t => t.fsPath)
 
-    // Track the number of matches
-    let matches = 0
-    inspector.on('match', () => matches++)
-
-    try {
-      inspector.run()
-      window.showInformationMessage(`Found duplication matches ${matches}`)
-    } catch(err) {
-      console.log(err)
-    }
+  let inspector = new Inspector(paths, {
+    threshold: program.threshold,
+    identifiers: program.identifiers,
+    literals: program.literals,
+    minInstances: program.minInstances
   })
 
+  // Retrieve the requested reporter
+  let reporterType = reporters[program.reporter] || reporters.default
+  new reporterType(inspector, {
+    truncate: program.truncate
+  })
+
+  // Track the number of matches
+  let matches = 0
+  inspector.on('match', (match) => {
+    matches++
+    provider.addItem(match)
+  })
+
+  inspector.on('start', () => {
+    provider.clear()
+  })
+
+  inspector.on('end', () => {
+    provider.refresh()
+  })
+
+  try {
+    inspector.run()
+    window.showInformationMessage(`Found duplication matches ${matches}`)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+/**
+ * Register a new command for the extension.
+ * @param {vscode.ExtensionContext} context extension context
+ * @param {string} command command name
+ * @param {Function} callback command to execute
+ */
+function registerCommand(context, command, callback = () => { }) {
+  const disposable = commands.registerCommand(command, callback)
   context.subscriptions.push(disposable)
 }
 
